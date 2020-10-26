@@ -42,6 +42,7 @@ namespace BedtimeCore.Editor
 			}
 		}
 
+		[MenuItem("BedtimeCore/Editor History Window")]
 		public static void GetWindow()
 		{
 			EditorHistoryWindow window = EditorWindow.CreateInstance<EditorHistoryWindow>();

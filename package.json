@@ -2,13 +2,14 @@
   "name": "com.bedtime.editor-history",
   "displayName": "Editor History",
   "description": "Editor History",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Bedtime Digital Games",
     "url": "https://git.bedtime.io/unity-packages/com.bedtime.editor-history"
   },
   "keywords": [],
   "dependencies": {
-    "com.bedtime.storage": "1.0.0"
+    "com.bedtime.storage": "1.0.0",
+    "com.bedtime.reflection-utility": "1.0.0"
   }
 }
