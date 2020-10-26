@@ -1,0 +1,17 @@
+{
+    "name": "com.bedtime.editor-history.Editor",
+    "references": [
+        "GUID:10d6d79efd38c8d46b13150b0c6d2d66"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
