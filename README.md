@@ -12,18 +12,17 @@ The selection history can also be navigated through its own window by clicking t
 By default this window acts as a modal that will close if you click away from it, but in the top right corner of the window you can pop it out into a seperate window that can be docked anywhere, should you want to keep it open permanently.
 
 # Installation
-You can clone this repository directly into your *Packages* folder in your project, add the git URL through Unity's package manager, or through [OpenUPM](https://openupm.com/)
-### Git + Unity Package Manager
+## Git + Unity Package Manager
 Add this URL to your Unity Package manager as a git package
 
 ```https://github.com/BedtimeDigitalGames/Unity-Editor-History.git#1.1.0``` 
 
 ![image](https://user-images.githubusercontent.com/104233613/164909451-0ca62c24-0106-463b-9c4b-e7fbcd6409ad.png)
 
-### OpenUPM
+## OpenUPM
 ```$ openupm add com.bedtime.editor-history```
 
-### UnityPackage
+## UnityPackage
 [Download](https://github.com/BedtimeDigitalGames/Unity-Editor-History/releases/download/1.1.0/com.bedtime.editor-history.unitypackage)
 
 # How to use
