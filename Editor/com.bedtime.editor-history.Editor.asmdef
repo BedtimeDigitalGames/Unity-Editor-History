@@ -1,8 +1,6 @@
 {
     "name": "com.bedtime.editor-history.Editor",
-    "references": [
-        "GUID:10d6d79efd38c8d46b13150b0c6d2d66"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],

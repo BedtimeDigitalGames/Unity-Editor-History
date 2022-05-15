@@ -1,113 +1,114 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System;
-using BedtimeCore.Reflection;
+using UnityToolbarExtender;
 
-namespace BedtimeCore.Editor
+namespace BedtimeCore.EditorHistory
 {
-	public class EditorHistoryWindow : SearchableEditorWindow
+	internal class EditorHistoryWindow : EditorWindow
 	{
 		[SerializeField]
-		private Vector2 scroll;
-		private Texture lockedIcon;
-		private Texture unlockedIcon;
-		private const int entryHeight = 16;
-		private bool clickedHistoryEntry;
+		private Vector2 _scroll;
+		private bool _clickedHistoryEntry;
+		private bool _isModal;
+		
+		private GUIStyle _scrollbarStyle;
+		private GUIStyle _listStyle;
+		private GUIStyle _navStyle;
+		private GUIContent _popoutButtonContent;
 
-		private GUIStyle lockStyle;
-		private GUIStyle listStyle;
-		private GUIStyle navStyle;
+		private const int ENTRY_HEIGHT = 16;
+		private const int TOOLBAR_BUTTON_SPACE = 2;
+		private const string TOOLBAR_BUTTON_ICON = "d_UnityEditor.AnimationWindow";
+		private const string POPOUT_ICON = "d_ScaleTool On";
+		private const string TOOLBAR_BUTTON_TITLE = "Selection History";
 
-		private string SearchField
+		[InitializeOnLoadMethod]
+		static void InitializeOnLoad() => ToolbarExtender.RightToolbarGUI.Add(DrawToolbarButton);
+
+		private static void DrawToolbarButton()
 		{
-			get
+			var icon = EditorGUIUtility.IconContent(TOOLBAR_BUTTON_ICON);
+			GUIContent buttonText = new GUIContent(icon.image, TOOLBAR_BUTTON_TITLE);
+			GUIStyle buttonStyle = EditorStyles.toolbarButton;
+			
+			GUILayout.FlexibleSpace();
+			var rect = GUILayoutUtility.GetRect(buttonText, buttonStyle, GUILayout.Width(32));
+			var clicked = GUI.Button(rect, buttonText, buttonStyle);
+			
+			if(clicked)
 			{
-				return this.GetValue<string>("m_SearchFilter");
+				ShowModalWindow(GUIUtility.GUIToScreenRect(rect));
 			}
-			set
-			{
-				this.SetValue("m_SearchFilter", value);
-			}
+			
+			GUILayout.Space(TOOLBAR_BUTTON_SPACE);
 		}
 
-		private SearchMode Mode
+		private static void ShowModalWindow(Rect ownerButtonRect)
 		{
-			get
-			{
-				return this.GetValue<SearchMode>("m_SearchMode");
-			}
-			set
-			{
-				this.SetValue("m_SearchMode", value);
-			}
+			var window = CreateInstance<EditorHistoryWindow>();
+			var size = new Vector2(200, 300);
+			var pos = ownerButtonRect;
+			pos.x -= size.x - pos.width - TOOLBAR_BUTTON_SPACE;
+			window._scroll = Vector2.up * int.MaxValue;
+			window._isModal = true;
+			window.ShowAsDropDown(pos, size);
 		}
-
-		[MenuItem("BedtimeCore/Editor History Window")]
-		public static void GetWindow()
+		
+		private void ShowPopoutWindow()
 		{
-			EditorHistoryWindow window = EditorWindow.CreateInstance<EditorHistoryWindow>();
+			var window = CreateInstance<EditorHistoryWindow>();
+			var rect = position;
+			rect.size = rect.size * 1.2f;
 			window.Show();
+			window.position = rect;
+		}
+		
+		private void OnEnable()
+		{
+			_popoutButtonContent = EditorGUIUtility.TrTextContentWithIcon(string.Empty, "Pop Out", POPOUT_ICON);
+			titleContent = EditorGUIUtility.TrTextContentWithIcon(TOOLBAR_BUTTON_TITLE, TOOLBAR_BUTTON_ICON);
+			EditorHistory.OnHistoryUpdated += OnHistoryChanged;
+			Selection.selectionChanged += Repaint;
 		}
 
-		public override void OnEnable()
+		private void OnDisable()
 		{
-			lockedIcon = EditorGUIUtility.IconContent("IN LockButton on act").image;
-			unlockedIcon = EditorGUIUtility.IconContent("IN LockButton act").image;
-
-			base.OnEnable();
-			SetTitle();
-			EditorHistory.OnHistoryUpdated += HandleHistoryChanged;
-			Selection.selectionChanged += HandleSelectionChanged;
-		}
-
-		private void SetTitle()
-		{
-			titleContent = typeof(EditorGUIUtility).InvokeMethod<GUIContent, string, string>("TextContentWithIcon", "History", "d_CustomSorting");
+			EditorHistory.OnHistoryUpdated -= OnHistoryChanged;
+			Selection.selectionChanged -= Repaint;
 		}
 
 		private void OnGUI()
 		{
-			DrawToolbar();
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			DrawModalToolbar();
 			DrawList();
-			DrawBottomNavigation();
+			EditorGUILayout.EndVertical();
 		}
 
-		private void HandleSelectionChanged()
+		private void DrawModalToolbar()
 		{
-			Repaint();
-		}
-
-		private void HandleHistoryChanged(int location)
-		{
-			if (!clickedHistoryEntry)
+			if (!_isModal)
 			{
-				scroll.y = (location * entryHeight) - entryHeight;
+				return;
 			}
-			Repaint();
-		}
-
-		private void DrawToolbar()
-		{
+			
 			EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-
-			LockStyle.active = EditorHistory.Locked ? EditorStyles.toolbarButton.normal : EditorStyles.toolbarButton.active;
-			LockStyle.normal = !EditorHistory.Locked ? EditorStyles.toolbarButton.normal : EditorStyles.toolbarButton.active;
-			var lockObj = new GUIContent(EditorHistory.Locked ? lockedIcon : unlockedIcon);
-
-			if (GUILayout.Button(lockObj, LockStyle, GUILayout.Width(32)))
+			GUILayout.Label(TOOLBAR_BUTTON_TITLE, EditorStyles.boldLabel);
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button(_popoutButtonContent, EditorStyles.toolbarButton))
 			{
-				EditorHistory.Locked = !EditorHistory.Locked;
+				ShowPopoutWindow();
 			}
-
-			if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
-			{
-				this.InvokeVoid("ClearSearchFilter");
-				EditorHistory.Clear();
-			}
-			EditorGUILayout.Space();
-			this.InvokeVoid("SearchFieldGUI");
-
 			EditorGUILayout.EndHorizontal();
+		}
+
+		private void OnHistoryChanged(int location)
+		{
+			if (!_clickedHistoryEntry)
+			{
+				_scroll.y = (location * ENTRY_HEIGHT) - ENTRY_HEIGHT;
+			}
+			Repaint();
 		}
 
 		private void DrawList()
@@ -115,29 +116,29 @@ namespace BedtimeCore.Editor
 			var selectedColor = new Color(.6f, .6f, .6f, 1f);
 			var orgBGColor = GUI.backgroundColor;
 
-			scroll = GUILayout.BeginScrollView(scroll, GUIStyle.none, GUI.skin.GetStyle("VerticalScrollbar"));
+			_scroll = GUILayout.BeginScrollView(_scroll, GUIStyle.none, GUI.skin.verticalScrollbar);
 			EditorGUILayout.BeginVertical();
-			for (int i = 0; i < EditorHistory.History.Count; i++)
+			for (int i = 0; i < EditorHistory.HistoryObjects.Count; i++)
 			{
-				var entry = EditorHistory.History[i];
-				if (!entry.Exists || !MatchesSearch(entry))
+				var entry = EditorHistory.HistoryObjects[i];
+				if (!entry.Exists)
 				{
 					continue;
 				}
 
-				if (i == EditorHistory.Location && EditorHistory.HistoryActive)
+				if (i == EditorHistory.Location)
 				{
 					GUI.backgroundColor = selectedColor;
 				}
 
-				var icon = AssetPreview.GetMiniThumbnail(entry.selection);
+				var icon = AssetPreview.GetMiniThumbnail(entry.Selection);
 
-				GUIContent info = new GUIContent(entry.selection.name, icon);
+				GUIContent info = new GUIContent(entry.Selection.name, icon);
 				if (GUILayout.Button(info, ListStyle))
 				{
-					clickedHistoryEntry = true;
+					_clickedHistoryEntry = true;
 					EditorHistory.SetSelection(i);
-					clickedHistoryEntry = false;
+					_clickedHistoryEntry = false;
 				}
 				GUI.backgroundColor = orgBGColor;
 			}
@@ -145,101 +146,21 @@ namespace BedtimeCore.Editor
 			GUILayout.EndScrollView();
 		}
 
-		private void DrawBottomNavigation()
-		{
-			using (new EditorGUILayout.HorizontalScope())
-			{
-				EditorGUI.BeginDisabledGroup(EditorHistory.Location == 0 && EditorHistory.HistoryActive);
-				if (GUILayout.Button("◀", NavStyle))
-				{
-					EditorHistory.Navigate(EditorHistory.NavigationDirection.Backward);
-				}
-				EditorGUI.EndDisabledGroup();
-				EditorGUI.BeginDisabledGroup(EditorHistory.Location == EditorHistory.History.Count - 1 && EditorHistory.HistoryActive);
-				if (GUILayout.Button("▶", NavStyle))
-				{
-					EditorHistory.Navigate(EditorHistory.NavigationDirection.Forward);
-				}
-				EditorGUI.EndDisabledGroup();
-			}
-		}
-
-		private bool MatchesSearch(EditorHistory.HistoryEntity entry)
-		{
-			if (!entry.Exists || string.IsNullOrEmpty(SearchField))
-			{
-				return true;
-			}
-
-			switch (Mode)
-			{
-				case SearchMode.All:
-					return ContainsName(entry) || ContainsType(entry);
-				case SearchMode.Name:
-					return ContainsName(entry);
-				case SearchMode.Type:
-					return ContainsType(entry);
-				default:
-					break;
-			}
-
-			return false;
-		}
-
-		private bool ContainsName(EditorHistory.HistoryEntity entry)
-		{
-			return StringContains(entry.Name, SearchField);
-		}
-
-		private bool ContainsType(EditorHistory.HistoryEntity entry)
-		{
-			return StringContains(entry.Type.Name, SearchField);
-		}
-
-		private bool StringContains(string source, string toCompare)
-		{
-			return source.IndexOf(toCompare, StringComparison.OrdinalIgnoreCase) >= 0;
-		}
-
-		private GUIStyle LockStyle
-		{
-			get
-			{
-				if (lockStyle == null || !lockStyle.name.Equals("toolbarbutton"))
-				{
-					lockStyle = new GUIStyle(EditorStyles.toolbarButton);
-					lockStyle.alignment = TextAnchor.MiddleCenter;
-					lockStyle.contentOffset = new Vector2(-2f, -2f);
-				}
-				return lockStyle;
-			}
-		}
-
 		private GUIStyle ListStyle
 		{
 			get
 			{
-				if (listStyle == null || !listStyle.name.Equals("toolbarbutton"))
+				if (_listStyle != null)
 				{
-					listStyle = new GUIStyle(EditorStyles.toolbarButton);
-					listStyle.alignment = TextAnchor.MiddleLeft;
-					listStyle.fixedHeight = entryHeight;
+					return _listStyle;
 				}
-				return listStyle;
-			}
-		}
 
-		private GUIStyle NavStyle
-		{
-			get
-			{
-				if (navStyle == null || !navStyle.name.Equals("toolbarbutton"))
+				_listStyle = new GUIStyle(EditorStyles.toolbarButton)
 				{
-					navStyle = new GUIStyle(EditorStyles.toolbarButton);
-					navStyle.alignment = TextAnchor.MiddleCenter;
-					navStyle.contentOffset = new Vector2(0, -2f);
-				}
-				return navStyle;
+					alignment = TextAnchor.MiddleLeft, 
+					fixedHeight = ENTRY_HEIGHT,
+				};
+				return _listStyle;
 			}
 		}
 	}
