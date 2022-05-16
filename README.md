@@ -12,6 +12,9 @@ The selection history can also be navigated through its own window by clicking t
 By default this window acts as a modal that will close if you click away from it, but in the top right corner of the window you can pop it out into a seperate window that can be docked anywhere, should you want to keep it open permanently.
 
 # Installation
+Windows only for now. 
+Unity does not support reading Mouse4/Mouse5 in edit-mode, so this tool reads the mouse input through Win32 APIs instead.
+
 ## Git + Unity Package Manager
 Add this URL to your Unity Package manager as a git package
 
