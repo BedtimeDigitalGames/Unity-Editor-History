@@ -40,9 +40,13 @@ namespace BedtimeCore.EditorHistory
 		public static void SetSelection(int location, bool setActive = true)
 		{
 			EditorWindow focus = EditorWindow.focusedWindow;
-			if (Application.isPlaying && focus != null && focus.GetType() == _gameViewType)
+			if (Application.isPlaying && focus != null)
 			{
-				return;
+				var focusType = focus.GetType();
+				if (focusType.FullName == _gameViewTypeName)
+				{
+					return;
+				}
 			}
 
 			if (HistoryObjects.Count > 0)
@@ -151,8 +155,8 @@ namespace BedtimeCore.EditorHistory
 		}
 		
 		private static History History => History.instance;
-		
-		private static readonly Type _gameViewType = Type.GetType("UnityEditor.GameView");
+
+		private static readonly string _gameViewTypeName = "UnityEditor.GameView";
 
 		private static bool _selectionWasSet;
 
