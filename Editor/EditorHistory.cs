@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityObject = UnityEngine.Object;
 
 namespace BedtimeCore.EditorHistory
@@ -16,7 +17,8 @@ namespace BedtimeCore.EditorHistory
 		{
 			Selection.selectionChanged += OnSelectionChanged;
 			EditorApplication.update += OnUpdate;
-			EditorApplication.hierarchyChanged += OnHierarchyChanged;
+			EditorSceneManager.sceneOpened += OnSceneChanged;
+			EditorSceneManager.sceneSaved += OnSceneSaved;
 			AddObject(Selection.activeObject);
 		}
 
@@ -58,26 +60,24 @@ namespace BedtimeCore.EditorHistory
 			}
 		}
 
-		private static void Navigate(NavigationDirection direction)
+		private static void Navigate(NavigationDirection direction, int amount = 1)
 		{
-			int amount = direction == NavigationDirection.Forward ? 1 : -1;
+			var totalAmount = amount * (direction == NavigationDirection.Forward ? 1 : -1);
 			if (!IsNavigating)
 			{
 				SetSelection(HistoryObjects.Count - 1);
 			}
-			else if (Location - ClampLocation(Location + amount) != 0)
+			else if (Location - ClampLocation(Location + totalAmount) != 0)
 			{
-				SetSelection(Location + amount);
-			}
-		}
-
-		private static void OnHierarchyChanged()
-		{
-			var toRemove = HistoryObjects.Where(t => !t.Exists).ToList();
-
-			foreach (HistoryObject t in toRemove)
-			{
-				HistoryObjects.Remove(t);
+				var target = HistoryObjects[ClampLocation(Location + totalAmount)];
+				if (!target.Exists)
+				{
+					Navigate(direction, amount + 1);
+				}
+				else
+				{
+					SetSelection(Location + totalAmount);
+				}
 			}
 		}
 
@@ -87,7 +87,7 @@ namespace BedtimeCore.EditorHistory
 			location = location < 0 ? 0 : location;
 			return location;
 		}
-		
+
 		private static void OnUpdate()
 		{
 			if (!InternalEditorUtility.isApplicationActive)
@@ -153,7 +153,23 @@ namespace BedtimeCore.EditorHistory
 
 			AddObject(selection);
 		}
-		
+
+		private static void OnSceneChanged(Scene scene, OpenSceneMode mode)
+		{
+			for (var i = 0; i < HistoryObjects.Count; i++)
+			{
+				HistoryObjects[i] = HistoryObjects[i].UpdateSelection(scene.name);
+			}
+		}
+
+		private static void OnSceneSaved(Scene scene)
+		{
+			for (var i = 0; i < HistoryObjects.Count; i++)
+			{
+				HistoryObjects[i] =	HistoryObjects[i].UpdateName();
+			}
+		}
+
 		private static History History => History.instance;
 
 		private static readonly string _gameViewTypeName = "UnityEditor.GameView";
@@ -165,10 +181,12 @@ namespace BedtimeCore.EditorHistory
 			{NavigationDirection.Backward, false},
 			{NavigationDirection.Forward, false},
 		};
-		
+
 #if UNITY_EDITOR_WIN
+
 		[DllImport("user32.dll")]
 		private static extern short GetAsyncKeyState(ushort virtualKeyCode);
+
 #endif
 		
 		private static bool GetKey(NavigationDirection direction)

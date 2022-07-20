@@ -8,11 +8,10 @@ namespace BedtimeCore.EditorHistory
 	[Serializable]
 	internal class History : ScriptableSingleton<History>
 	{
+		private const int HISTORY_MAX = 1024;
+		
 		[SerializeField]
 		private int _location;
-
-		[SerializeField]
-		private bool _locked;
 
 		[SerializeField]
 		private List<HistoryObject> _historyObjects = new List<HistoryObject>(32);
@@ -23,14 +22,13 @@ namespace BedtimeCore.EditorHistory
 			set => _location = value;
 		}
 
-		public bool Locked
-		{
-			get => _locked;
-			set => _locked = value;
-		}
-		
 		public void Save()
 		{
+			if (_historyObjects.Count > HISTORY_MAX)
+			{
+				var toRemove = _historyObjects.Count - HISTORY_MAX;
+				_historyObjects.RemoveRange(0, toRemove);
+			}
 			Save(true);
 		}
 

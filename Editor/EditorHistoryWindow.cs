@@ -65,6 +65,7 @@ namespace BedtimeCore.EditorHistory
 		
 		private void OnEnable()
 		{
+			_listStyle = null;
 			_popoutButtonContent = EditorGUIUtility.TrTextContentWithIcon(string.Empty, "Pop Out", POPOUT_ICON);
 			titleContent = EditorGUIUtility.TrTextContentWithIcon(TOOLBAR_BUTTON_TITLE, TOOLBAR_BUTTON_ICON);
 			EditorHistory.OnHistoryUpdated += OnHistoryChanged;
@@ -123,24 +124,22 @@ namespace BedtimeCore.EditorHistory
 				var entry = EditorHistory.HistoryObjects[i];
 				if (!entry.Exists)
 				{
-					continue;
+					GUI.enabled = false;
 				}
 
 				if (i == EditorHistory.Location)
 				{
 					GUI.backgroundColor = selectedColor;
 				}
-
-				var icon = AssetPreview.GetMiniThumbnail(entry.Selection);
-
-				GUIContent info = new GUIContent(entry.Selection.name, icon);
-				if (GUILayout.Button(info, ListStyle))
+				
+				if (GUILayout.Button(entry.GUIContent, ListStyle))
 				{
 					_clickedHistoryEntry = true;
 					EditorHistory.SetSelection(i);
 					_clickedHistoryEntry = false;
 				}
 				GUI.backgroundColor = orgBGColor;
+				GUI.enabled = true;
 			}
 			EditorGUILayout.EndVertical();
 			GUILayout.EndScrollView();
