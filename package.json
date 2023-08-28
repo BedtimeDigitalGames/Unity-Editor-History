@@ -2,7 +2,7 @@
   "name": "com.bedtime.editor-history",
   "displayName": "Editor History",
   "description": "View and navigate your selection history",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": {
     "name": "Bedtime Digital Games",
     "url": "https://git.bedtime.io/unity-packages/com.bedtime.editor-history"
