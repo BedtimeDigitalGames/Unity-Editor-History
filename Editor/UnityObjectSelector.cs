@@ -14,6 +14,15 @@ namespace BedtimeCore.EditorHistory
         
         public bool Select(object selection)
         {
+            if(EditorApplication.isPlaying && EditorWindow.focusedWindow != null)
+            {
+                var name = EditorWindow.focusedWindow.GetType().Name;
+                if(name == "GameView")
+                {
+                    return false;
+                }
+            }
+            
             if(selection is UnityEngine.Object obj)
             {
                 Selection.activeObject = obj;

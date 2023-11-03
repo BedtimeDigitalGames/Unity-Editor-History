@@ -8,9 +8,11 @@ namespace BedtimeCore.EditorHistory
 	[Serializable]
     public struct HistoryObject
 	{
-		[SerializeField]
-		private object _selection;
-		
+		private object _objectSelection;
+
+        [SerializeField]
+        private Object _unityObject;
+        
 		[SerializeField]
 		private string _scenePath;
 
@@ -28,18 +30,17 @@ namespace BedtimeCore.EditorHistory
 
 		public HistoryObject(object selection)
 		{
-            var unityObj = selection as Object;
+            _unityObject = selection as Object;
             _name = selection.ToString();
-
-			_selection = selection;
+			_objectSelection = selection;
 			_scenePath = null;
 			_scene = null;
             _guiContent = new GUIContent(_name);
-            if (unityObj != null)
+            if (_unityObject != null)
             {
-                _name = unityObj.name;
-                _guiContent	= new GUIContent(_name, AssetPreview.GetMiniThumbnail(unityObj));
-                if (unityObj is GameObject go && !AssetDatabase.Contains(unityObj))
+                _name = _unityObject.name;
+                _guiContent	= new GUIContent(_name, AssetPreview.GetMiniThumbnail(_unityObject));
+                if (_unityObject is GameObject go && !AssetDatabase.Contains(_unityObject))
                 {
                     _scenePath = GetObjectPath(go);
                     _scene = go.scene.name;
@@ -66,11 +67,11 @@ namespace BedtimeCore.EditorHistory
 
         private string GetName()
         {
-            if(_selection is Object unityObj)
+            if(Selection is Object unityObj)
             {
                 return unityObj.name;
             }
-            return _selection.ToString();
+            return Selection.ToString();
         }
 
 		public HistoryObject UpdateName()
@@ -93,7 +94,7 @@ namespace BedtimeCore.EditorHistory
 				return this;
 			}
 
-			_selection = GameObject.Find(ScenePath);
+			Selection = GameObject.Find(ScenePath);
 			UpdateName();
 			return this;
 		}
@@ -115,9 +116,25 @@ namespace BedtimeCore.EditorHistory
 
 		public string Scene => _scene ?? string.Empty;
 
-		public object Selection => _selection;
+		public object Selection
+        {
+            get => _unityObject != null ? _unityObject : _objectSelection;
+            set
+            {
+                if(value is Object unityObj)
+                {
+                    _unityObject = unityObj;
+                    _objectSelection = null;
+                }
+                else
+                {
+                    _objectSelection = value;
+                    _unityObject = null;
+                }
+            }
+        }
 
-		public GUIContent GUIContent
+        public GUIContent GUIContent
 		{
 			get
 			{
