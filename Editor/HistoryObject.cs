@@ -6,10 +6,10 @@ using Object = UnityEngine.Object;
 namespace BedtimeCore.EditorHistory
 {
 	[Serializable]
-	internal struct HistoryObject
+    public struct HistoryObject
 	{
 		[SerializeField]
-		private Object _selection;
+		private object _selection;
 		
 		[SerializeField]
 		private string _scenePath;
@@ -26,23 +26,29 @@ namespace BedtimeCore.EditorHistory
 		[SerializeField]
 		private bool _isSceneObject;
 
-		public HistoryObject(Object selection)
+		public HistoryObject(object selection)
 		{
-			_name = selection.name;
+            var unityObj = selection as Object;
+            _name = selection.ToString();
+
 			_selection = selection;
 			_scenePath = null;
 			_scene = null;
-			_guiContent	= new GUIContent(_name, AssetPreview.GetMiniThumbnail(selection));
-			if (selection is GameObject go && !AssetDatabase.Contains(selection))
-			{
-				_scenePath = GetObjectPath(go);
-				_scene = go.scene.name;
-			}
-
+            _guiContent = new GUIContent(_name);
+            if (unityObj != null)
+            {
+                _name = unityObj.name;
+                _guiContent	= new GUIContent(_name, AssetPreview.GetMiniThumbnail(unityObj));
+                if (unityObj is GameObject go && !AssetDatabase.Contains(unityObj))
+                {
+                    _scenePath = GetObjectPath(go);
+                    _scene = go.scene.name;
+                }
+            }
 			_isSceneObject = _scenePath != null;
 		}
 
-		private static string GetObjectPath(Object obj)
+		private static string GetObjectPath(object obj)
 		{
 			if (obj is GameObject go)
 			{
@@ -58,6 +64,15 @@ namespace BedtimeCore.EditorHistory
 			return null;
 		}
 
+        private string GetName()
+        {
+            if(_selection is Object unityObj)
+            {
+                return unityObj.name;
+            }
+            return _selection.ToString();
+        }
+
 		public HistoryObject UpdateName()
 		{
 			if (!_isSceneObject || !Exists)
@@ -65,7 +80,8 @@ namespace BedtimeCore.EditorHistory
 				return this;
 			}
 
-			_name = Selection.name;
+			_name = GetName();
+            
 			_scenePath = GetObjectPath(Selection);
 			return this;
 		}
@@ -90,7 +106,7 @@ namespace BedtimeCore.EditorHistory
 			{
 				if (Exists)
 				{
-					return Selection.name;
+					return GetName();
 				}
 
 				return !string.IsNullOrEmpty(_scene) ? $"[{_scene}] {_name}" : _name;
@@ -99,7 +115,7 @@ namespace BedtimeCore.EditorHistory
 
 		public string Scene => _scene ?? string.Empty;
 
-		public Object Selection => _selection;
+		public object Selection => _selection;
 
 		public GUIContent GUIContent
 		{

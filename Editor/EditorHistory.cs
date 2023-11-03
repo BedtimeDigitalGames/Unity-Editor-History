@@ -10,25 +10,33 @@ using UnityObject = UnityEngine.Object;
 
 namespace BedtimeCore.EditorHistory
 {
-	[InitializeOnLoad]
-	internal class EditorHistory
+    [InitializeOnLoad]
+	public class EditorHistory
 	{
-		static EditorHistory()
+        static EditorHistory()
 		{
-			Selection.selectionChanged += OnSelectionChanged;
 			EditorApplication.update += OnUpdate;
 			EditorSceneManager.sceneOpened += OnSceneChanged;
 			EditorSceneManager.sceneSaved += OnSceneSaved;
+            RegisterHistorySelector(new UnityObjectSelector());
 			AddObject(Selection.activeObject);
 		}
 
-		public static event Action<int> OnHistoryUpdated;
+        public static void RegisterHistorySelector(IHistorySelector selector)
+        {
+            _historySelectors.Add(selector);
+            selector.AddToHistory += AddObject;
+        }
 
-		public static bool IsNavigating { get; private set; }
+        private static bool IsNavigating { get; set; }
 
-		public static List<HistoryObject> HistoryObjects => History.HistoryObjects;
+        private static readonly List<IHistorySelector> _historySelectors = new List<IHistorySelector>();
 
-		public static int Location
+        internal static event Action<int> OnHistoryUpdated;
+
+        internal static List<HistoryObject> HistoryObjects => History.HistoryObjects;
+
+        internal static int Location
 		{
 			get => IsNavigating ? History.Location : HistoryObjects.Count - 1;
 
@@ -39,7 +47,7 @@ namespace BedtimeCore.EditorHistory
 			}
 		}
 
-		public static void SetSelection(int location, bool setActive = true)
+		internal static void SetSelection(int location, bool setActive = true)
 		{
 			EditorWindow focus = EditorWindow.focusedWindow;
 			if (Application.isPlaying && focus != null)
@@ -51,18 +59,33 @@ namespace BedtimeCore.EditorHistory
 				}
 			}
 
-			if (HistoryObjects.Count > 0)
-			{
-				IsNavigating = setActive;
-				_selectionWasSet = setActive;
-				Selection.activeObject = HistoryObjects[ClampLocation(location)].Selection;
-				Location = location;
-			}
-		}
+            if (HistoryObjects.Count <= 0)
+            {
+                return;
+            }
+
+            IsNavigating = setActive;
+            _selectionWasSet = setActive;
+            foreach (var historySelector in _historySelectors)
+            {
+                var selection = HistoryObjects[ClampLocation(location)].Selection;
+                if(historySelector.Select(selection))
+                {
+                    historySelector.Select(selection);
+                    break;
+                }
+            }
+            Location = location;
+        }
 
 		private static void Navigate(NavigationDirection direction, int amount = 1)
 		{
 			var totalAmount = amount * (direction == NavigationDirection.Forward ? 1 : -1);
+            if(Mathf.Abs(totalAmount) > History.HistoryObjects.Count)
+            {
+                return;
+            }
+            
 			if (!IsNavigating)
 			{
 				SetSelection(HistoryObjects.Count - 1);
@@ -120,8 +143,16 @@ namespace BedtimeCore.EditorHistory
 			}
 		}
 
-		private static void AddObject(UnityObject obj)
+		private static void AddObject(object obj)
 		{
+            IsNavigating = obj != null;
+            
+            if (_selectionWasSet)
+            {
+                _selectionWasSet = false;
+                return;
+            }
+            
 			if (obj == null)
 			{
 				SetSelection(HistoryObjects.Count - 1, false);
@@ -138,20 +169,6 @@ namespace BedtimeCore.EditorHistory
 			HistoryObjects.Add(entry);
 			Location = HistoryObjects.Count - 1;
 			History.Save();
-		}
-
-		private static void OnSelectionChanged()
-		{
-			UnityObject selection = Selection.activeObject;
-			IsNavigating = selection != null;
-
-			if (_selectionWasSet)
-			{
-				_selectionWasSet = false;
-				return;
-			}
-
-			AddObject(selection);
 		}
 
 		private static void OnSceneChanged(Scene scene, OpenSceneMode mode)
