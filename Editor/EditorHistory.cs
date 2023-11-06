@@ -68,11 +68,15 @@ namespace BedtimeCore.EditorHistory
             _selectionWasSet = setActive;
             foreach (var historySelector in _historySelectors)
             {
-                var selection = HistoryObjects[ClampLocation(location)].Selection;
-                if(historySelector.Select(selection))
+                var obj = HistoryObjects[ClampLocation(location)];
+                if (obj.Exists)
                 {
-                    historySelector.Select(selection);
-                    break;
+                    var selection = obj.Selection;
+                    if(historySelector.Select(selection))
+                    {
+                        historySelector.Select(selection);
+                        break;
+                    }
                 }
             }
             Location = location;

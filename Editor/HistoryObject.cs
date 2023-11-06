@@ -8,11 +8,9 @@ namespace BedtimeCore.EditorHistory
 	[Serializable]
     public struct HistoryObject
 	{
-		private object _objectSelection;
-
         [SerializeField]
-        private Object _unityObject;
-        
+        private SerializedTarget _serializedTarget;
+
 		[SerializeField]
 		private string _scenePath;
 
@@ -30,17 +28,17 @@ namespace BedtimeCore.EditorHistory
 
 		public HistoryObject(object selection)
 		{
-            _unityObject = selection as Object;
+            _serializedTarget = new SerializedTarget(selection);
             _name = selection.ToString();
-			_objectSelection = selection;
 			_scenePath = null;
 			_scene = null;
             _guiContent = new GUIContent(_name);
-            if (_unityObject != null)
+            if (_serializedTarget.IsUnityObject)
             {
-                _name = _unityObject.name;
-                _guiContent	= new GUIContent(_name, AssetPreview.GetMiniThumbnail(_unityObject));
-                if (_unityObject is GameObject go && !AssetDatabase.Contains(_unityObject))
+                var uObject = _serializedTarget.UnityObject;
+                _name = uObject.name;
+                _guiContent	= new GUIContent(_name, AssetPreview.GetMiniThumbnail(uObject));
+                if (uObject is GameObject go && !AssetDatabase.Contains(uObject))
                 {
                     _scenePath = GetObjectPath(go);
                     _scene = go.scene.name;
@@ -67,11 +65,11 @@ namespace BedtimeCore.EditorHistory
 
         private string GetName()
         {
-            if(Selection is Object unityObj)
+            if(_serializedTarget.IsValid && _serializedTarget.IsUnityObject)
             {
-                return unityObj.name;
+                return _serializedTarget.UnityObject.name;
             }
-            return Selection.ToString();
+            return _serializedTarget.Value.ToString();
         }
 
 		public HistoryObject UpdateName()
@@ -94,12 +92,12 @@ namespace BedtimeCore.EditorHistory
 				return this;
 			}
 
-			Selection = GameObject.Find(ScenePath);
+            _serializedTarget.SetValue(GameObject.Find(ScenePath));
 			UpdateName();
 			return this;
 		}
-		
-		public bool Exists => Selection != null;
+
+        public bool Exists => _serializedTarget.IsValid;
 
 		public string Name
 		{
@@ -116,23 +114,7 @@ namespace BedtimeCore.EditorHistory
 
 		public string Scene => _scene ?? string.Empty;
 
-		public object Selection
-        {
-            get => _unityObject != null ? _unityObject : _objectSelection;
-            set
-            {
-                if(value is Object unityObj)
-                {
-                    _unityObject = unityObj;
-                    _objectSelection = null;
-                }
-                else
-                {
-                    _objectSelection = value;
-                    _unityObject = null;
-                }
-            }
-        }
+		public object Selection => _serializedTarget.Value;
 
         public GUIContent GUIContent
 		{
