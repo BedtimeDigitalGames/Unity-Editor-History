@@ -5,10 +5,10 @@ using UnityEngine;
 
 namespace BedtimeCore.EditorHistory
 {
-	[Serializable]
+	[Serializable, FilePath("EditorHistory/History.txt", FilePathAttribute.Location.PreferencesFolder)]
 	internal class History : ScriptableSingleton<History>
 	{
-		private const int HISTORY_MAX = 1024;
+		private const int HISTORY_MAX = 128;
 		
 		[SerializeField]
 		private int _location;
@@ -29,7 +29,7 @@ namespace BedtimeCore.EditorHistory
 				var toRemove = _historyObjects.Count - HISTORY_MAX;
 				_historyObjects.RemoveRange(0, toRemove);
 			}
-			Save(true);
+			Save(false);
 		}
 
 		public List<HistoryObject> HistoryObjects => _historyObjects;

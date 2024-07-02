@@ -6,7 +6,6 @@ using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityObject = UnityEngine.Object;
 
 namespace BedtimeCore.EditorHistory
 {
@@ -16,9 +15,11 @@ namespace BedtimeCore.EditorHistory
         static EditorHistory()
 		{
 			EditorApplication.update += OnUpdate;
-			EditorSceneManager.sceneOpened += OnSceneChanged;
+			EditorSceneManager.sceneOpened += (scene, _) => OnSceneOpened(scene);
 			EditorSceneManager.sceneSaved += OnSceneSaved;
+			EditorApplication.quitting += () => History.Save();
             RegisterHistorySelector(new UnityObjectSelector());
+            EditorApplication.delayCall += () => OnSceneOpened(SceneManager.GetActiveScene());
 			AddObject(Selection.activeObject);
 		}
 
@@ -172,10 +173,9 @@ namespace BedtimeCore.EditorHistory
 
 			HistoryObjects.Add(entry);
 			Location = HistoryObjects.Count - 1;
-			History.Save();
 		}
 
-		private static void OnSceneChanged(Scene scene, OpenSceneMode mode)
+		private static void OnSceneOpened(Scene scene)
 		{
 			for (var i = 0; i < HistoryObjects.Count; i++)
 			{
