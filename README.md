@@ -11,14 +11,15 @@ The selection history can also be navigated through its own window by clicking t
 
 By default this window acts as a modal that will close if you click away from it, but in the top right corner of the window you can pop it out into a seperate window that can be docked anywhere, should you want to keep it open permanently.
 
-# Installation
-Windows only for now. 
-Unity does not support reading Mouse4/Mouse5 in edit-mode, so this tool reads the mouse input through Win32 APIs instead.
+# Getting started
+Simply install the package, and now by default, your Back/Forward mouse buttons will navigate back and forth through your history. The shortcuts can be changed to any other key from Unity's Shortcut manager.
+**Unity has no support for mouse shortcuts prior to version 2022.2! Instead the package will fall back to hardcoded Mouse4/5 button polling directly from the WIN32 API.**
+(This also means that there is no mouse support at all for MacOS Unity versions prior to 2022.2)
 
 ## Git + Unity Package Manager
 Add this URL to your Unity Package manager as a git package
 
-```https://github.com/BedtimeDigitalGames/Unity-Editor-History.git#1.2.1``` 
+```https://github.com/BedtimeDigitalGames/Unity-Editor-History.git#1.4.0``` 
 
 ![image](https://user-images.githubusercontent.com/104233613/164909451-0ca62c24-0106-463b-9c4b-e7fbcd6409ad.png)
 
