@@ -27,7 +27,7 @@ Add this URL to your Unity Package manager as a git package
 ```$ openupm add com.bedtime.editor-history```
 
 ## UnityPackage
-[Download](https://github.com/BedtimeDigitalGames/Unity-Editor-History/releases/download/1.2.1/com.bedtime.editor-history.unitypackage)
+[Download](https://github.com/BedtimeDigitalGames/Unity-Editor-History/releases/download/1.4.0/com.bedtime.editor-history.unitypackage)
 
 # How to use
  - Click back and forwards on your mouse to navigate through your selection history
