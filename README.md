@@ -19,7 +19,7 @@ Simply install the package, and now by default, your Back/Forward mouse buttons 
 ## Git + Unity Package Manager
 Add this URL to your Unity Package manager as a git package
 
-```https://github.com/BedtimeDigitalGames/Unity-Editor-History.git#1.4.0``` 
+```https://github.com/BedtimeDigitalGames/Unity-Editor-History.git#1.4.1``` 
 
 ![image](https://user-images.githubusercontent.com/104233613/164909451-0ca62c24-0106-463b-9c4b-e7fbcd6409ad.png)
 
@@ -27,7 +27,7 @@ Add this URL to your Unity Package manager as a git package
 ```$ openupm add com.bedtime.editor-history```
 
 ## UnityPackage
-[Download](https://github.com/BedtimeDigitalGames/Unity-Editor-History/releases/download/1.4.0/com.bedtime.editor-history.unitypackage)
+[Download](https://github.com/BedtimeDigitalGames/Unity-Editor-History/releases/download/1.4.1/com.bedtime.editor-history.unitypackage)
 
 # How to use
  - Click back and forwards on your mouse to navigate through your selection history

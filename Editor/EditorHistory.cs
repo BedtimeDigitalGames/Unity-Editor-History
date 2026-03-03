@@ -23,9 +23,13 @@ namespace BedtimeCore.EditorHistory
 			EditorSceneManager.sceneOpened += (scene, _) => OnSceneOpened(scene);
 			EditorSceneManager.sceneSaved += OnSceneSaved;
 			EditorApplication.quitting += () => History.Save();
-            RegisterHistorySelector(new UnityObjectSelector());
-            EditorApplication.delayCall += () => OnSceneOpened(SceneManager.GetActiveScene());
-			AddObject(Selection.activeObject);
+
+            EditorApplication.delayCall += () =>
+            {
+	            OnSceneOpened(SceneManager.GetActiveScene());
+	            RegisterHistorySelector(new UnityObjectSelector());
+	            AddObject(Selection.activeObject);
+            };
 		}
 
         public static void RegisterHistorySelector(IHistorySelector selector)
